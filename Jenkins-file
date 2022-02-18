@@ -1,0 +1,29 @@
+	pipeline {
+	   agent any  
+	tools {
+	  maven 'mvn'
+	}   
+	 triggers {
+	  pollSCM '* * * * *'
+	}
+	parameters {
+  choice choices: ['master', 'dev', 'release'], description: 'select the option', name: 'branch'
+}
+	  stages {
+		stage('Pull the code') {
+			steps {
+				git branch: "${params.branch}", credentialsId: 'Git', url: 'https://github.com/S2193/trainingwale.git'
+			  }
+			}
+			stage('Bulid the code') {
+			steps {
+			   sh 'mvn clean package'
+				}
+			}
+		stage('deploy the code') {
+			steps {
+			deploy adapters: [tomcat8(credentialsId: 'tomcat', path: '', url: 'http://54.215.122.34:8080')], contextPath: '8080/login', onFailure: false, war: '**/target/*.war'
+		  }
+		}
+	  }
+	}
